@@ -1,7 +1,6 @@
 import networkx as nx
 import numpy as np
 import random
-import matplotlib.pyplot as plt
 from simple_k_factor import *
 from networkx.algorithms.matching import max_weight_matching
 from networkx.algorithms.matching import is_perfect_matching
@@ -54,15 +53,8 @@ def cycles(g):
         cycles.append(cycle)
     return cycles
 
-
-
-
 def get_graph(w, h):
     g = construct_graph(w, h)
-    # then this: https://en.wikipedia.org/wiki/Vertex_cycle_cover
-    # key phrase "disjoint cycle cover" or "vertex-disjoint"
-    # See An Algorithm for Computing Simple k-Factors
-    # print("".join("[" + ",".join(str(y) for y in x) + "]\n" for x in nx.cycle_basis(g)))
     inflated, gadgets = construct_inflated(g, 2)
     matching = max_weight_matching(inflated, maxcardinality=True)
     if not is_perfect_matching(inflated, matching):
