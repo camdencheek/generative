@@ -1,9 +1,9 @@
 import networkx as nx
 import numpy as np
 import random
-from simple_k_factor import *
 from networkx.algorithms.matching import max_weight_matching
 from networkx.algorithms.matching import is_perfect_matching
+from networkx.algorithms.regular import simple_k_factor
 from networkx.algorithms.cycles import find_cycle
 
 class Node:
@@ -22,13 +22,16 @@ class Node:
     def __str__(self):
         return f"({self.m},{self.n})"
 
+    def point(self):
+        return (self.m, self.n)
+
 
 def construct_graph(rows, cols):
     g = nx.Graph()
     g.add_nodes_from(Node(i,j) for i in range(rows) for j in range(cols))
     for node in g.nodes():
         for adj in adjacent(node, rows, cols):
-            g.add_edge(node, adj)
+            g.add_edge(node, adj, weight=random.randint(1,10))
     return g
 
 
@@ -40,7 +43,7 @@ def adjacent(node, rows, cols):
                     continue
                 yield Node(i,j)
 
-def cycles(g):
+def node_cycles(g):
     unvisited_nodes = set(g.nodes)
     cycles = []
     while True:
@@ -51,22 +54,12 @@ def cycles(g):
         for edge in cycle:
             unvisited_nodes.discard(edge[0])
         cycles.append(cycle)
-    return cycles
+    node_cycles = [[edge[0] for edge in cycle] for cycle in cycles]
+    return node_cycles
 
 def get_graph(w, h):
     g = construct_graph(w, h)
-    inflated, gadgets = construct_inflated(g, 2)
-    matching = max_weight_matching(inflated, maxcardinality=True)
-    if not is_perfect_matching(inflated, matching):
-        raise("cannot construct perfect matching")
-
-    inflated.remove_edges_from(inflated.edges())
-    for edge in matching:
-        inflated.add_edge(edge[0], edge[1])
-
-    for gadget in gadgets:
-        gadget.restore_original(inflated)
-    return inflated
+    return simple_k_factor(g, 2)
 
 
 if __name__ == "__main__":
