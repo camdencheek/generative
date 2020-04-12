@@ -8,6 +8,13 @@ import numpy.linalg as lin
 import numpy as np
 import itertools as it
 
+def path_interpolated_cycle(ctx, cycle):
+    segments = cycle_cubic_interpolate(cycle)
+    ctx.move_to(segments[0][0][0], segments[0][0][1])
+    for segment in segments:
+        ctx.curve_to(segment[1][0], segment[1][1], segment[2][0], segment[2][1], segment[3][0], segment[3][1])
+
+
 def path_tangent_cycle(ctx, cycle, smooth=0.3):
     start = cycle[1].point()
     ctx.move_to(start[0], start[1])
@@ -19,8 +26,8 @@ def path_tangent_cycle(ctx, cycle, smooth=0.3):
 
 def path_straight(ctx, cycle):
     for node in cycle:
-        x = node.m
-        y = node.n
+        x = node.x
+        y = node.y
         ctx.line_to(x, y)
 
 def draw_lines(ctx, g):
@@ -61,6 +68,18 @@ def draw_smooth(ctx, g):
         path_tangent_cycle(ctx, cycle)
         ctx.fill()
 
+def draw_smooth_interpolate(ctx, g):
+    ctx.set_source_rgba(0, 0, 0, 0.5)
+
+    ctx.set_line_width(0.01)
+    ctx.set_tolerance(0.1)
+
+    ctx.set_line_join(cairo.LINE_JOIN_ROUND)
+    for cycle in node_cycles(g):
+        ctx.new_path()
+        path_interpolated_cycle(ctx, cycle)
+        ctx.fill()
+
 def tangent_vector(a, b, c):
     a = np.array([a[0],a[1],0], dtype=float)
     b = np.array([b[0],b[1],0], dtype=float)
@@ -95,7 +114,8 @@ def main():
     ctx.translate(1, 1)
 
     g = get_graph(SIZE, SIZE)
-    draw_fill(ctx, g)
+    remove_intersections(g, SIZE, SIZE)
+    draw_smooth_interpolate(ctx, g)
     surface.write_to_png("test.png")
 
 if __name__ == '__main__':
